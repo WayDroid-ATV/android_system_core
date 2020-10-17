@@ -241,9 +241,10 @@ void Service::SetProcessAttributesAndCaps() {
     }
 
     if (!seclabel_.empty()) {
-        if (setexeccon(seclabel_.c_str()) < 0) {
+        // Disabled in Waydroid
+        /*if (setexeccon(seclabel_.c_str()) < 0) {
             PLOG(FATAL) << "cannot setexeccon('" << seclabel_ << "') for " << name_;
-        }
+        }*/
     }
 
     if (capabilities_) {
@@ -577,7 +578,8 @@ Result<void> Service::Start() {
     }
 
     std::string scon;
-    if (!seclabel_.empty()) {
+    // Disabled in Waydroid
+    /*if (!seclabel_.empty()) {
         scon = seclabel_;
     } else {
         auto result = ComputeContextFromExecutable(args_[0]);
@@ -585,7 +587,7 @@ Result<void> Service::Start() {
             return result.error();
         }
         scon = *result;
-    }
+    }*/
 
     // APEXd is always started in the "current" namespace because it is the process to set up
     // the current namespace.
