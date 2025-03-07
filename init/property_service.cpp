@@ -1132,6 +1132,12 @@ void PropertyLoadBootDefaults() {
             properties["ro.hardware.egl"] = "angle";
             properties["ro.hardware.vulkan"] = "pastel";
         }
+
+        if (properties["ro.hardware.gralloc"] == "gbm" &&
+            properties["gralloc.gbm.legacy"] != "true")
+        {
+            properties["ro.hardware.gralloc"] = "minigbm_gbm_mesa";
+        }
     }
 
     if (access(kDebugRamdiskProp, R_OK) == 0) {
