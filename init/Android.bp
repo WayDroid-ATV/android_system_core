@@ -131,6 +131,7 @@ libinit_cc_defaults {
         "-Werror",
         "-Wextra",
         "-Wno-unused-parameter",
+        "-Wno-unused-function",
         "-Wthread-safety",
     ],
     product_variables: {
@@ -585,6 +586,7 @@ cc_defaults {
         "-Wall",
         "-Wextra",
         "-Wno-unused-parameter",
+        "-Wno-unused-function",
         "-Werror",
     ],
     static_libs: [

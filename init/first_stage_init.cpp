@@ -330,6 +330,7 @@ int FirstStageMain(int argc, char** argv) {
     CHECKCALL(setenv("PATH", _PATH_DEFPATH, 1));
     // Get the basic filesystem setup we need put together in the initramdisk
     // on / and then we'll let the rc file figure out the rest.
+    /* Disabled in Waydroid, mounted by host system instead
     CHECKCALL(mount("tmpfs", "/dev", "tmpfs", MS_NOSUID, "mode=0755"));
     CHECKCALL(mkdir("/dev/pts", 0755));
     CHECKCALL(mkdir("/dev/socket", 0755));
@@ -338,6 +339,8 @@ int FirstStageMain(int argc, char** argv) {
 #define MAKE_STR(x) __STRING(x)
     CHECKCALL(mount("proc", "/proc", "proc", 0, "hidepid=2,gid=" MAKE_STR(AID_READPROC)));
 #undef MAKE_STR
+    */
+    CHECKCALL(mkdir("/dev/socket", 0755));
     // Don't expose the raw commandline to unprivileged processes.
     CHECKCALL(chmod("/proc/cmdline", 0440));
     std::string cmdline;
@@ -348,8 +351,10 @@ int FirstStageMain(int argc, char** argv) {
     android::base::ReadFileToString("/proc/bootconfig", &bootconfig);
     gid_t groups[] = {AID_READPROC};
     CHECKCALL(setgroups(arraysize(groups), groups));
+    /* Disabled in Waydroid, mounted by host system instead
     CHECKCALL(mount("sysfs", "/sys", "sysfs", 0, NULL));
     CHECKCALL(mount("selinuxfs", "/sys/fs/selinux", "selinuxfs", 0, NULL));
+    */
 
     CHECKCALL(mknod("/dev/kmsg", S_IFCHR | 0600, makedev(1, 11)));
 
@@ -361,8 +366,11 @@ int FirstStageMain(int argc, char** argv) {
     CHECKCALL(mknod("/dev/urandom", S_IFCHR | 0666, makedev(1, 9)));
 
     // This is needed for log wrapper, which gets called before ueventd runs.
-    CHECKCALL(mknod("/dev/ptmx", S_IFCHR | 0666, makedev(5, 2)));
-    CHECKCALL(mknod("/dev/null", S_IFCHR | 0666, makedev(1, 3)));
+    // Can be created by LXC on Waydroid
+    mknod("/dev/ptmx", S_IFCHR | 0666, makedev(5, 2));
+    mknod("/dev/null", S_IFCHR | 0666, makedev(1, 3));
+    mknod("/dev/loop-control", S_IFCHR | 0660, makedev(10, 237));
+    mknod("/dev/device-mapper", S_IFCHR | 0660, makedev(10, 236));
 
     // These below mounts are done in first stage init so that first stage mount can mount
     // subdirectories of /mnt/{vendor,product}/.  Other mounts, not required by first stage mount,
@@ -515,6 +523,8 @@ int FirstStageMain(int argc, char** argv) {
         if (!fsm) {
             fsm = CreateFirstStageMount(cmdline);
         }
+
+        /* Disabled in Waydroid
         if (!fsm) {
             LOG(FATAL) << "FirstStageMount not available";
         }
@@ -526,6 +536,7 @@ int FirstStageMain(int argc, char** argv) {
         if (!fsm->DoFirstStageMount()) {
             LOG(FATAL) << "Failed to mount required partitions early ...";
         }
+        */
     }
 
     struct stat new_root_info {};
@@ -544,7 +555,8 @@ int FirstStageMain(int argc, char** argv) {
            1);
 
     const char* path = "/system/bin/init";
-    const char* args[] = {path, "selinux_setup", nullptr};
+    // Waydroid: skip selinux_setup
+    const char* args[] = {path, "second_stage", nullptr};
     auto fd = open("/dev/kmsg", O_WRONLY | O_CLOEXEC);
     dup2(fd, STDOUT_FILENO);
     dup2(fd, STDERR_FILENO);
