@@ -94,18 +94,20 @@ Result<uid_t> DecodeUid(const std::string& name) {
  */
 Result<int> CreateSocket(const std::string& name, int type, bool passcred, bool should_listen,
                          mode_t perm, uid_t uid, gid_t gid, const std::string& socketcon) {
-    if (!socketcon.empty()) {
+    // Disabled in Waydroid
+    /*if (!socketcon.empty()) {
         if (setsockcreatecon(socketcon.c_str()) == -1) {
             return ErrnoError() << "setsockcreatecon(\"" << socketcon << "\") failed";
         }
-    }
+    }*/
 
     android::base::unique_fd fd(socket(PF_UNIX, type, 0));
     if (fd < 0) {
         return ErrnoError() << "Failed to open socket '" << name << "'";
     }
 
-    if (!socketcon.empty()) setsockcreatecon(nullptr);
+    // Disabled in Waydroid
+    /*if (!socketcon.empty()) setsockcreatecon(nullptr);*/
 
     struct sockaddr_un addr;
     memset(&addr, 0 , sizeof(addr));
@@ -117,9 +119,10 @@ Result<int> CreateSocket(const std::string& name, int type, bool passcred, bool 
     }
 
     std::string secontext;
-    if (SelabelLookupFileContext(addr.sun_path, S_IFSOCK, &secontext) && !secontext.empty()) {
+    // Disabled in Waydroid
+    /*if (SelabelLookupFileContext(addr.sun_path, S_IFSOCK, &secontext) && !secontext.empty()) {
         setfscreatecon(secontext.c_str());
-    }
+    }*/
 
     if (passcred) {
         int on = 1;
@@ -131,9 +134,10 @@ Result<int> CreateSocket(const std::string& name, int type, bool passcred, bool 
     int ret = bind(fd.get(), (struct sockaddr*)&addr, sizeof(addr));
     int savederrno = errno;
 
-    if (!secontext.empty()) {
+    // Disabled in Waydroid
+    /*if (!secontext.empty()) {
         setfscreatecon(nullptr);
-    }
+    }*/
 
     auto guard = android::base::make_scope_guard([&addr] { unlink(addr.sun_path); });
 
