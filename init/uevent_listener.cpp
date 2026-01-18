@@ -21,6 +21,9 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <sys/mount.h>
+#include <sys/wait.h>
+
 #include <memory>
 
 #include <android-base/logging.h>
@@ -175,6 +178,15 @@ ListenerAction UeventListener::RegenerateUeventsForPath(const std::string& path,
 static const char* kRegenerationPaths[] = {"/sys/devices/virtual/block"};
 
 void UeventListener::RegenerateUevents(const ListenerCallback& callback) const {
+    pid_t pid = fork();
+
+    if (pid == 0) {
+        unshare(CLONE_NEWNS);
+        mount("sysfs", "/sys", "sysfs", MS_REMOUNT, NULL);
+    } else {
+        waitpid(pid, NULL, 0);
+    }
+
     for (const auto path : kRegenerationPaths) {
         if (RegenerateUeventsForPath(path, callback) == ListenerAction::kStop) return;
     }
