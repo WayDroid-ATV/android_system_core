@@ -31,6 +31,7 @@
 #include <android-base/chrono_utils.h>
 #include <android-base/file.h>
 #include <android-base/logging.h>
+#include <android-base/properties.h>
 #include <android-base/stringprintf.h>
 #include <android-base/strings.h>
 #include <fs_mgr.h>
@@ -772,6 +773,10 @@ void DeviceHandler::HandleUevent(const Uevent& uevent) {
         devpath = "/dev/" + uevent.device_name;
     } else {
         devpath = "/dev/" + Basename(uevent.path);
+    }
+
+    if (!(block || android::base::GetBoolProperty("persist.waydroid.uevent", false))) {
+        return;
     }
 
     mkdir_recursive(Dirname(devpath), 0755);
