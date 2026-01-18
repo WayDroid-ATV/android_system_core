@@ -172,7 +172,7 @@ ListenerAction UeventListener::RegenerateUeventsForPath(const std::string& path,
     return RegenerateUeventsForDir(d.get(), callback);
 }
 
-static const char* kRegenerationPaths[] = {"/sys/devices"};
+static const char* kRegenerationPaths[] = {"/sys/devices/virtual/block"};
 
 void UeventListener::RegenerateUevents(const ListenerCallback& callback) const {
     for (const auto path : kRegenerationPaths) {
