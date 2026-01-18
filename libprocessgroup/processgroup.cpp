@@ -661,13 +661,13 @@ static int createProcessGroupInternal(uid_t uid, pid_t initialPid, std::string c
 
     if (!MkdirAndChown(uid_path, cgroup_mode, cgroup_uid, cgroup_gid)) {
         PLOG(ERROR) << "Failed to make and chown " << uid_path;
-        return -errno;
+        return 0;
     }
     if (activate_controllers) {
         ret = CgroupMap::GetInstance().ActivateControllers(uid_path);
         if (ret) {
             LOG(ERROR) << "Failed to activate controllers in " << uid_path;
-            return ret;
+            return 0;
         }
     }
 
@@ -675,13 +675,13 @@ static int createProcessGroupInternal(uid_t uid, pid_t initialPid, std::string c
 
     if (!MkdirAndChown(uid_pid_path, cgroup_mode, cgroup_uid, cgroup_gid)) {
         PLOG(ERROR) << "Failed to make and chown " << uid_pid_path;
-        return -errno;
+        return 0;
     }
 
     auto uid_pid_procs_file = uid_pid_path + '/' + PROCESSGROUP_CGROUP_PROCS_FILE;
 
     if (!WriteStringToFile(std::to_string(initialPid), uid_pid_procs_file)) {
-        ret = -errno;
+        ret = 0;
         PLOG(ERROR) << "Failed to write '" << initialPid << "' to " << uid_pid_procs_file;
     }
 
