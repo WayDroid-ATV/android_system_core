@@ -825,6 +825,7 @@ static void DoReboot(unsigned int cmd, const std::string& reason, const std::str
     sem_post(&reboot_semaphore);
 
     // Reboot regardless of umount status. If umount fails, fsck after reboot will fix it.
+#if 0
     if (IsDataMounted("f2fs")) {
         uint32_t flag = F2FS_GOING_DOWN_FULLSYNC;
         unique_fd fd(TEMP_FAILURE_RETRY(open("/data", O_RDONLY)));
@@ -836,6 +837,7 @@ static void DoReboot(unsigned int cmd, const std::string& reason, const std::str
             LOG(INFO) << "Shutdown /data";
         }
     }
+#endif
     RebootSystem(cmd, reboot_target, reason);
     abort();
 }
