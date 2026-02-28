@@ -134,6 +134,7 @@ static bool __has_memfd_support() {
         return false;
     }
 
+#if 0
     /*
      * Ensure that the kernel supports ashmem ioctl commands on memfds. If not,
      * fall back to using ashmem.
@@ -144,6 +145,7 @@ static bool __has_memfd_support() {
               ashmem_size, buf_size);
         return false;
     }
+#endif
 
     if (debug_log) {
         ALOGD("memfd: device has memfd support, using it");
