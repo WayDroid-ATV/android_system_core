@@ -102,6 +102,7 @@ static bool SetMmapRndBitsMin(int start, int min, bool compat) {
 // ec9ee4acd97c drivers: char: random: add get_random_long()
 // 5ef11c35ce86 mm: ASLR: use get_random_long()
 Result<void> SetMmapRndBitsAction(const BuiltinArguments&) {
+#if 0 // Disabled in Waydroid
 // values are arch-dependent
 #if defined(USER_MODE_LINUX)
     // uml does not support mmap_rnd_bits
@@ -142,6 +143,9 @@ Result<void> SetMmapRndBitsAction(const BuiltinArguments&) {
 
     LOG(FATAL) << "Unable to set adequate mmap entropy value!";
     return Error();
+#else
+    return {};
+#endif
 }
 
 #define KPTR_RESTRICT_PATH "/proc/sys/kernel/kptr_restrict"
@@ -152,12 +156,14 @@ Result<void> SetMmapRndBitsAction(const BuiltinArguments&) {
 //
 // Aborts if unable to set this to an acceptable value.
 Result<void> SetKptrRestrictAction(const BuiltinArguments&) {
+#if 0 // Disabled in Waydroid
     std::string path = KPTR_RESTRICT_PATH;
 
     if (!SetHighestAvailableOptionValue(path, KPTR_RESTRICT_MINVALUE, KPTR_RESTRICT_MAXVALUE)) {
         LOG(FATAL) << "Unable to set adequate kptr_restrict value!";
         return Error();
     }
+#endif
     return {};
 }
 

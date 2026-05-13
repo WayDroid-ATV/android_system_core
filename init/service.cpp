@@ -243,11 +243,13 @@ void Service::SetProcessAttributesAndCaps(InterprocessFifo setsid_finished) {
         LOG(FATAL) << "cannot set attribute for " << name_ << ": " << result.error();
     }
 
+#if 0 // Disabled in Waydroid
     if (!seclabel_.empty()) {
         if (setexeccon(seclabel_.c_str()) < 0) {
             PLOG(FATAL) << "cannot setexeccon('" << seclabel_ << "') for " << name_;
         }
     }
+#endif
 
     if (capabilities_) {
         if (!SetCapsForExec(*capabilities_)) {
@@ -642,6 +644,7 @@ Result<void> Service::Start() {
     }
 
     std::string scon;
+#if 0 // Disabled in Waydroid
     if (!seclabel_.empty()) {
         scon = seclabel_;
     } else {
@@ -651,6 +654,9 @@ Result<void> Service::Start() {
         }
         scon = *result;
     }
+#else
+    scon = "";
+#endif
 
     if (!mount_namespace_.has_value()) {
         // remember from which mount namespace the service should start
