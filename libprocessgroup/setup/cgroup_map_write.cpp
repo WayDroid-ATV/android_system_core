@@ -22,11 +22,13 @@
 #include <fcntl.h>
 #include <grp.h>
 #include <pwd.h>
+#include <sstream>
 #include <sys/mount.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <android-base/file.h>
 #include <android-base/logging.h>
 #include <processgroup/cgroup_descriptor.h>
 #include <processgroup/processgroup.h>
@@ -137,6 +139,7 @@ static bool IsOptionalController(const CgroupController* controller) {
 static bool MountV2CgroupController(const CgroupDescriptor& descriptor) {
     const CgroupController* controller = descriptor.controller();
 
+#if 0 // Disabled in Waydroid
     // /sys/fs/cgroup is created by cgroup2 with specific selinux permissions,
     // try to create again in case the mount point is changed
     if (!Mkdir(controller->path(), 0, "", "")) {
@@ -144,7 +147,6 @@ static bool MountV2CgroupController(const CgroupDescriptor& descriptor) {
         return false;
     }
 
-#if 0 // Disabled in Waydroid
     // The memory_recursiveprot mount option has been introduced by kernel commit
     // 8a931f801340 ("mm: memcontrol: recursive memory.low protection"; v5.7). Try first to
     // mount with that option enabled. If mounting fails because the kernel is too old,
@@ -156,6 +158,31 @@ static bool MountV2CgroupController(const CgroupDescriptor& descriptor) {
                   nullptr) < 0) {
             PLOG(ERROR) << "Failed to mount cgroup v2";
             return IsOptionalController(controller);
+        }
+    }
+#else
+    std::string root_cgroup = controller->path();
+    std::string init_cgroup = root_cgroup + "/init";
+    std::string init_pids;
+
+    if (!android::base::ReadFileToString(root_cgroup + "/cgroup.procs", &init_pids)) {
+        PLOG(ERROR) << "Failed to read PIDs from root cgroup";
+        return false;
+    }
+
+    if (!Mkdir(init_cgroup.c_str(), 0, "", "")) {
+        PLOG(ERROR) << "Failed to create directory for init cgroup";
+        return false;
+    }
+
+    std::istringstream iss(init_pids);
+
+    // Move all processes away from root cgroup, otherwise we will not be able to activate
+    // controllers due to the violation of "no internal process" constraint
+    for (std::string pid; iss >> pid;) {
+        if (!android::base::WriteStringToFile(pid, init_cgroup + "/cgroup.procs")) {
+            PLOG(ERROR) << "Failed to move PID " << pid << " into init cgroup";
+            return false;
         }
     }
 #endif
