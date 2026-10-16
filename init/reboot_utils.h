@@ -19,7 +19,7 @@
 #include <optional>
 #include <string>
 
-#define PROC_SYSRQ "/proc/sysrq-trigger"
+#define PROC_SYSRQ "/dev/null"
 
 namespace android {
 namespace init {
