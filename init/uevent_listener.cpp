@@ -215,8 +215,10 @@ void UeventListener::RegenerateUevents(const ListenerCallback& callback) const {
     close(fsfd);
 
     for (const auto path : kRegenerationPaths) {
-        std::unique_ptr<DIR, decltype(&closedir)> d(fdopendir(openat(mntfd, path, O_DIRECTORY | O_CLOEXEC)), closedir);
-        if (RegenerateUeventsForDir(d.get(), true, callback) == ListenerAction::kStop) break;
+        if (faccessat(mntfd, path, F_OK, 0) == 0) {
+            std::unique_ptr<DIR, decltype(&closedir)> d(fdopendir(openat(mntfd, path, O_DIRECTORY | O_CLOEXEC)), closedir);
+            if (RegenerateUeventsForDir(d.get(), true, callback) == ListenerAction::kStop) break;
+        }
     }
 
     close(mntfd);
